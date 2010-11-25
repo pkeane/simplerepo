@@ -20,6 +20,39 @@ _DEBUG = True
 def rfc3339():
   return time.strftime('%Y-%m-%dT%H:%M:%S%z')
 
+class Collection(db.Model):
+  name = db.StringProperty(required=True)
+  created = db.DateTimeProperty(auto_now_add=True)
+  created_by = db.StringProperty(required=True) 
+  attributes = db.ListProperty(db.Key)
+
+  @classmethod
+  def get_one(self):
+      q = self.all()
+      q.order('created')
+      return q.get()
+
+  def get_items(self):
+      items = []
+      query = Items.all()
+      query.filter('collection =',self)
+      for result in query:
+          items.append(result)
+      return items
+
+  def can_delete(self):
+      query = Item.all()
+      query.filter('collection =',self)
+      if query.count(1):
+          return False
+      else:
+          return True
+
+class Item(db.Model):
+  name = db.StringProperty(required=True)
+  created = db.DateTimeProperty(auto_now_add=True)
+  collection = db.ReferenceProperty(Collection)
+
 class Template():
   def __init__(self,request,template_name):
     self.template_name = template_name
@@ -48,7 +81,7 @@ class Template():
       raise TemplateNotFound(self.template_name)
     return template.render(self.vars)
 
-def is_logged_in(req):
+def get_user(req):
   user = users.get_current_user()
   if not user:
     if 'GET' == req.method:
@@ -56,12 +89,33 @@ def is_logged_in(req):
     else:
       #todo
       req.redirect(req.uri.application_uri()+'/401')
+  return user
 
 def get_index(req):
-  is_logged_in(req)
+  user = get_user(req)
   t = Template(req,'index.html')
   t.assign('title','SimpleRepository') 
   req.res.body = t.fetch() 
+
+def get_collection_form(req):
+  user = get_user(req)
+  t = Template(req,'collection_form.html')
+  colls = []
+  query = Collection.all()
+  query.filter('created_by =',user.user_id())
+  for result in query:
+      colls.append(result)
+  t.assign('collections',colls)
+  t.assign('title','SimpleRepository: Collection Form') 
+  req.res.body = t.fetch() 
+
+def post_to_collection_form(req):
+  user = get_user(req)
+  name = req.get('name')
+  if name:
+    collection = Collection(name=name,created_by=user.user_id())
+    collection.put()
+  req.redirect(req.uri.application_uri())
 
 def get_401(req):
   req.res.status = '401 Unauthorized'
@@ -82,6 +136,7 @@ def main():
   app.add('401', GET=get_401)  
   app.add('', GET=get_index)  
   app.add('/', GET=get_index)  
+  app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   run_wsgi_app(app)
 

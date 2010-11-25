@@ -142,6 +142,8 @@ class Request(object):
     def get(self,key):
       if self.query.has_key(key):
         return self.query[key]
+      if self.form.has_key(key):
+        return self.form[key]
       elif self.environ.has_key('selector.vars') and self.environ['selector.vars'].has_key(key):
         return self.environ['selector.vars'][key]
       else:

@@ -1,0 +1,24 @@
+{
+  "profile": {
+    "attributes":{
+      "title":{
+        "type":"string",
+          "required":false,
+          "repeatable":false,
+          "sameAs":"http://purl.org/dc/elements/1.1/title"
+      },
+        "metadata":{
+          "type":"object",
+          "required":false,
+          "attributes":{
+            "*":{
+              "type":"string",
+              "required":false,
+              "repeatable":false
+            }
+          }
+        }
+    }
+  }
+}
+
