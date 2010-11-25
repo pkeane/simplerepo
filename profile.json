@@ -3,6 +3,7 @@
     "attributes":{
       "title":{
         "type":"string",
+        "label":"Title",
           "required":false,
           "repeatable":false,
           "sameAs":"http://purl.org/dc/elements/1.1/title"
