@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Item {{ item.key().id() }}</h1>
+
+<img src="/viewitem/{{ item.media_file_key }}">
+
+{% endblock %}

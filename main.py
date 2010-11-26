@@ -165,6 +165,15 @@ def get_collection_form(req):
   t.assign('title','SimpleRepository: Collection Form') 
   req.res.body = t.fetch() 
 
+def get_item(req):
+  user = get_user(req)
+  t = Template(req,'item.html')
+  id = int(req.get('id'))
+  item = Item.get_by_id(id) 
+  t.assign('item',item)
+  t.assign('title','SimpleRepository: Item '+str(id)) 
+  req.res.body = t.fetch() 
+
 def get_collection(req):
   user = get_user(req)
   t = Template(req,'collection.html')
@@ -237,7 +246,7 @@ def get_viewitem(req):
     blob_info = blobstore.get(blob_key)
     if blob_info:
       img = images.Image(blob_key=blob_key)
-      img.resize(width=640, height=600)
+      img.resize(width=400, height=400)
       #img.im_feeling_lucky()
       thumbnail = img.execute_transforms(output_encoding=images.JPEG)
       req.res.headers['Content-Type'] = 'image/jpeg'
@@ -252,6 +261,7 @@ def main():
   app.add('', GET=get_index)  
   app.add('/', GET=get_index)  
   app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
+  app.add('/item/{id}', GET=get_item)  
   app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  

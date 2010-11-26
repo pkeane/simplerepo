@@ -12,7 +12,7 @@
 <ul class="grid">
 {% for item in items %}
 <li>
-<a href="/viewitem/{{ item.media_file_key }}"><img src="{{ item.thumbnail_link }}"></a>
+<a href="/item/{{ item.key().id() }}"><img src="{{ item.thumbnail_link }}"></a>
 <h4>{{ item.media_filename }}</h4>
 </li>
 {% endfor %}
