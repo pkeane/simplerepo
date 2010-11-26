@@ -1,12 +1,8 @@
 {% extends "base.html" %}
 
-{% block header %}
-<h1>SimpleRepository</h1>
-{% endblock %}
-
 {% block content %}
-<h2>Create a Collection</h2>
 <form method="post">
+  <h2>Create a Collection</h2>
   <label for="name">Name</label>
   <input type="text" name="name">
   <input type="submit" value="create">
@@ -15,7 +11,7 @@
 <h3>My Collections</h3>
 <ul>
 {% for c in collections %}
-  <li><a href="">{{ c.name }}</a></li>
+<li><a href="/collection/{{ c.ascii_id }}">{{ c.name }}</a> ({{ c.ascii_id }})</li>
 {% endfor %}
 </ul>
 
