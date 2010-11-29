@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Item {{ item.key().id() }}</h1>
 
-<img src="/thumbnail/{{ item.media_file_key }}?width=400&height=400">
+<img src="{{ item.thumbnail_link }}?width=400&height=400">
 <p>
 <a href="/serve/{{ item.media_file_key }}">{{ item.media_filename }}</a>
 </p>
