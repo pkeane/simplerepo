@@ -252,7 +252,7 @@ def get_thumbnail(req):
     blob_info = blobstore.get(blob_key)
     if blob_info:
       img = images.Image(blob_key=blob_key)
-      img.resize(width=width, height=height)
+      img.resize(width=int(width), height=int(height))
       img.im_feeling_lucky()
       thumbnail = img.execute_transforms(output_encoding=images.JPEG)
       req.res.headers['Content-Type'] = 'image/jpeg'
