@@ -3,6 +3,9 @@
 {% block content %}
 <h1>Item {{ item.key().id() }}</h1>
 
-<img src="/viewitem/{{ item.media_file_key }}">
+<img src="/thumbnail/{{ item.media_file_key }}?width=400&height=400">
+<p>
+<a href="/serve/{{ item.media_file_key }}">{{ item.media_filename }}</a>
+</p>
 
 {% endblock %}

@@ -222,6 +222,18 @@ def process_upload(req):
         item.put()
   req.redirect(req.uri.server_uri()+'/collection/'+coll_ascii)
 
+def serve_blob(req):
+  user = get_user(req)
+  blob_key = req.get("blob_key")
+  if blob_key:
+    blob_info = blobstore.get(blob_key)
+    if blob_info:
+      if 'image/jpeg' != blob_info.content_type:
+        req.res.headers['Content-Disposition'] = 'attachment; filename="'+blob_info.filename+'"' 
+      req.res.headers['Content-type'] = blob_info.content_type
+      req.res.headers[blobstore.BLOB_KEY_HEADER] = blob_key
+      req.res.body = 'ok'
+
 def get_hello(req):
   t = Template(req,'hello.html')
   t.assign('name',req.get('name')) 
@@ -230,24 +242,18 @@ def get_hello(req):
 
 def get_thumbnail(req):
   blob_key = req.get("blob_key")
+  width = req.get('width')
+  height = req.get('height')
+  if not width:
+    width = 100
+  if not height:
+    height = 100
   if blob_key:
     blob_info = blobstore.get(blob_key)
     if blob_info:
       img = images.Image(blob_key=blob_key)
-      img.resize(width=100, height=100)
+      img.resize(width=width, height=height)
       img.im_feeling_lucky()
-      thumbnail = img.execute_transforms(output_encoding=images.JPEG)
-      req.res.headers['Content-Type'] = 'image/jpeg'
-      req.res.body = thumbnail
-
-def get_viewitem(req):
-  blob_key = req.get("blob_key")
-  if blob_key:
-    blob_info = blobstore.get(blob_key)
-    if blob_info:
-      img = images.Image(blob_key=blob_key)
-      img.resize(width=400, height=400)
-      #img.im_feeling_lucky()
       thumbnail = img.execute_transforms(output_encoding=images.JPEG)
       req.res.headers['Content-Type'] = 'image/jpeg'
       req.res.body = thumbnail
@@ -265,7 +271,7 @@ def main():
   app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
-  app.add('/viewitem/{blob_key}', GET=get_viewitem)  
+  app.add('/serve/{blob_key}', GET=serve_blob)  
   app.add('/upload', POST=process_upload)  
   run_wsgi_app(app)
 
