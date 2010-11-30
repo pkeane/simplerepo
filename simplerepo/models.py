@@ -81,3 +81,17 @@ class ItemMetadata(db.Model):
   #format as <coll_ascii_id>.<att_ascii_id>:<value_text>
   metadata = db.StringListProperty()
 
+class User():
+  def __init__(self,dbuser):
+    self.dbuser = user
+
+  def get_collections():
+    colls = []
+    query = Collection.all()
+    query.filter('created_by =',self.dbuser.user_id())
+    for result in query:
+      colls.append(result)
+    return colls
+
+
+

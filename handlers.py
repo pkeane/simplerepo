@@ -13,41 +13,37 @@ from simplerepo.models import AttributeValues
 from simplerepo.models import Collection 
 from simplerepo.models import Item 
 from simplerepo.models import ItemMetadata 
+from simplerepo.models import User 
 from simplerepo.template import Template
 from simplerepo.utils import dirify 
 from simplerepo.utils import rfc3339 
 from yaro import Yaro 
 
-def get_user(req):
+#todo: figure out where this fx belongs
+def check_user(req):
   user = users.get_current_user()
   if not user:
     if 'GET' == req.method:
       req.redirect(users.create_login_url(req.uri.application_uri()))
     else:
-      #todo
-      req.redirect(req.uri.application_uri()+'/401')
-  return user
+      req.redirect(req.uri.server_uri()+'/401)
+  return User(user)
 
 def get_index(req):
-  user = get_user(req)
+  user = get_current_user(req)
   t = Template(req,'index.html')
   t.assign('title','SimpleRepository') 
   req.res.body = t.fetch() 
 
 def get_collection_form(req):
-  user = get_user(req)
+  user = get_current_user(req)
   t = Template(req,'collection_form.html')
-  colls = []
-  query = Collection.all()
-  query.filter('created_by =',user.user_id())
-  for result in query:
-      colls.append(result)
-  t.assign('collections',colls)
+  t.assign('collections',user.get_collections())
   t.assign('title','SimpleRepository: Collection Form') 
   req.res.body = t.fetch() 
 
 def get_item(req):
-  user = get_user(req)
+  user = get_current_user(req)
   t = Template(req,'item.html')
   id = int(req.get('id'))
   item = Item.get_by_id(id) 
@@ -56,7 +52,7 @@ def get_item(req):
   req.res.body = t.fetch() 
 
 def get_collection(req):
-  user = get_user(req)
+  user = get_current_user(req)
   t = Template(req,'collection.html')
   ascii_id = req.get('ascii_id')
   query = Collection.all()
@@ -71,7 +67,7 @@ def get_collection(req):
   req.res.body = t.fetch() 
 
 def post_to_collection_form(req):
-  user = get_user(req)
+  user = get_current_user(req)
   name = req.get('name')
   if name:
     ascii_id = dirify(name)
@@ -88,7 +84,7 @@ def get_401(req):
   req.res.body = 'unauthorized'
 
 def process_upload(req):
-  user = get_user(req)
+  user = get_current_user(req)
   coll_ascii = req.form['coll_ascii']
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
@@ -104,7 +100,7 @@ def process_upload(req):
   req.redirect(req.uri.server_uri()+'/collection/'+coll_ascii)
 
 def serve_blob(req):
-  user = get_user(req)
+  user = get_current_user(req)
   blob_key = req.get("blob_key")
   if blob_key:
     blob_info = blobstore.get(blob_key)
@@ -158,33 +154,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-
-#basic auth from
-#http://appengine-cookbook.appspot.com/recipe/decorator-for-basic-http-authentication/
-
-#import base64
-#from google.appengine.ext.webapp import template
-#...
-#def basicAuth(func):
-#  def callf(webappRequest, *args, **kwargs):
-#    authHeader = webappRequest.request.headers.get('Authorization')
-#    
-#    if authHeader == None:
-#      webappRequest.response.set_status(401, message="Authorization Required")
-#      webappRequest.response.headers['WWW-Authenticate'] = 'Basic realm="Secure Area"'
-#    else:
-#      auth_parts = authHeader.split(' ')
-#      user_pass_parts = base64.b64decode(auth_parts[1]).split(':')
-#      user_arg = user_pass_parts[0]
-#      pass_arg = user_pass_parts[1]
-#  
-#      if user_arg != "admin" or pass_arg != "foobar":
-#        webappRequest.response.set_status(401, message="Authorization Required")
-#        webappRequest.response.headers['WWW-Authenticate'] = 'Basic realm="Secure Area"'
-#    
-#        self.response.out.write(template.render('templates/error/401.html', {}))
-#      else:
-#        return func(webappRequest, *args, **kwargs)
-#  
-#  return callf
-
