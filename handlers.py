@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cgi 
+import os
 
 from django.utils import simplejson
 from google.appengine.api import images
@@ -19,6 +20,8 @@ from simplerepo.utils import dirify
 from simplerepo.utils import rfc3339 
 from yaro import Yaro 
 
+TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates')
+
 #todo: figure out where this fx belongs
 def check_user(req):
   user = users.get_current_user()
@@ -26,25 +29,25 @@ def check_user(req):
     if 'GET' == req.method:
       req.redirect(users.create_login_url(req.uri.application_uri()))
     else:
-      req.redirect(req.uri.server_uri()+'/401)
+      req.redirect(req.uri.server_uri()+'/401')
   return User(user)
 
 def get_index(req):
-  user = get_current_user(req)
-  t = Template(req,'index.html')
+  user = check_user(req)
+  t = Template(req,'index.html',TEMPLATE_PATH)
   t.assign('title','SimpleRepository') 
+  t.assign('collections',user.get_collections())
   req.res.body = t.fetch() 
 
 def get_collection_form(req):
-  user = get_current_user(req)
-  t = Template(req,'collection_form.html')
-  t.assign('collections',user.get_collections())
+  user = check_user(req)
+  t = Template(req,'collection_form.html',TEMPLATE_PATH)
   t.assign('title','SimpleRepository: Collection Form') 
   req.res.body = t.fetch() 
 
 def get_item(req):
-  user = get_current_user(req)
-  t = Template(req,'item.html')
+  user = check_user(req)
+  t = Template(req,'item.html',TEMPLATE_PATH)
   id = int(req.get('id'))
   item = Item.get_by_id(id) 
   t.assign('item',item)
@@ -52,8 +55,8 @@ def get_item(req):
   req.res.body = t.fetch() 
 
 def get_collection(req):
-  user = get_current_user(req)
-  t = Template(req,'collection.html')
+  user = check_user(req)
+  t = Template(req,'collection.html',TEMPLATE_PATH)
   ascii_id = req.get('ascii_id')
   query = Collection.all()
   query.filter('ascii_id =',ascii_id)
@@ -67,13 +70,13 @@ def get_collection(req):
   req.res.body = t.fetch() 
 
 def post_to_collection_form(req):
-  user = get_current_user(req)
+  user = check_user(req)
   name = req.get('name')
   if name:
     ascii_id = dirify(name)
     collection = Collection(name=name,ascii_id=ascii_id,created_by=user.user_id())
     collection.put()
-  req.redirect(req.uri.application_uri())
+  req.redirect(req.uri.server_uri())
 
 def post_to_collection(req):
   #creates an item
@@ -84,7 +87,7 @@ def get_401(req):
   req.res.body = 'unauthorized'
 
 def process_upload(req):
-  user = get_current_user(req)
+  user = check_user(req)
   coll_ascii = req.form['coll_ascii']
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
@@ -100,7 +103,7 @@ def process_upload(req):
   req.redirect(req.uri.server_uri()+'/collection/'+coll_ascii)
 
 def serve_blob(req):
-  user = get_current_user(req)
+  user = check_user(req)
   blob_key = req.get("blob_key")
   if blob_key:
     blob_info = blobstore.get(blob_key)
@@ -112,7 +115,7 @@ def serve_blob(req):
       req.res.body = 'ok'
 
 def get_hello(req):
-  t = Template(req,'hello.html')
+  t = Template(req,'hello.html',TEMPLATE_PATH)
   t.assign('name',req.get('name')) 
   t.assign('title','SimpleRepository') 
   req.res.body = t.fetch() 

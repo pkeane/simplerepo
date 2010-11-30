@@ -83,9 +83,12 @@ class ItemMetadata(db.Model):
 
 class User():
   def __init__(self,dbuser):
-    self.dbuser = user
+    self.dbuser = dbuser
 
-  def get_collections():
+  def user_id(self):
+    return self.dbuser.user_id()
+
+  def get_collections(self):
     colls = []
     query = Collection.all()
     query.filter('created_by =',self.dbuser.user_id())

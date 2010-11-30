@@ -1,10 +1,12 @@
 from google.appengine.api import users
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+import os
 
 class Template():
-  def __init__(self,request,template_name):
+  def __init__(self,request,template_name,template_path):
     self.template_name = template_name
     self.request = request
+    self.template_path = template_path
     self.vars = {}
 
   def assign(self,key,val):
@@ -21,7 +23,8 @@ class Template():
     }
     self.vars.update(values)
     template_dirs = []
-    template_dirs.append(os.path.join(os.path.dirname(__file__), 'templates'))
+    #template_dirs.append(os.path.join(os.path.dirname(__file__), 'templates'))
+    template_dirs.append(self.template_path)
     env = Environment(loader = FileSystemLoader(template_dirs))
     try:
       template = env.get_template(self.template_name)

@@ -8,11 +8,4 @@
   <input type="submit" value="create">
 </form>
 
-<h3>My Collections</h3>
-<ul>
-{% for c in collections %}
-<li><a href="/collection/{{ c.ascii_id }}">{{ c.name }}</a> ({{ c.ascii_id }})</li>
-{% endfor %}
-</ul>
-
 {% endblock %}

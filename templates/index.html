@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<h3>My Collections</h3>
+(<a href="collection/form">create a collection</a>)
 <ul>
-  <li><a href="collection/form">create a collection</a></li>
+{% for c in collections %}
+<li><a href="/collection/{{ c.ascii_id }}">{{ c.name }}</a> ({{ c.ascii_id }})</li>
+{% endfor %}
 </ul>
+
 {% endblock %}
