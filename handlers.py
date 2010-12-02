@@ -14,7 +14,6 @@ from simplerepo.models import AttributeValues
 from simplerepo.models import Collection 
 from simplerepo.models import Item 
 from simplerepo.models import ItemMetadata 
-from simplerepo.models import User 
 from simplerepo.template import Template
 from simplerepo.utils import dirify 
 from simplerepo.utils import rfc3339 
@@ -22,31 +21,27 @@ from yaro import Yaro
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates')
 
-#todo: figure out where this fx belongs
-def check_user(req):
+def get_index(req):
   user = users.get_current_user()
   if not user:
-    if 'GET' == req.method:
-      req.redirect(users.create_login_url(req.uri.application_uri()))
-    else:
-      req.redirect(req.uri.server_uri()+'/401')
-  return User(user)
-
-def get_index(req):
-  user = check_user(req)
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'index.html',TEMPLATE_PATH)
   t.assign('title','SimpleRepository') 
-  t.assign('collections',user.get_collections())
+  t.assign('collections',Collection.get_list_by_user(user))
   req.res.body = t.fetch() 
 
 def get_collection_form(req):
-  user = check_user(req)
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'collection_form.html',TEMPLATE_PATH)
   t.assign('title','SimpleRepository: Collection Form') 
   req.res.body = t.fetch() 
 
 def get_item(req):
-  user = check_user(req)
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'item.html',TEMPLATE_PATH)
   id = int(req.get('id'))
   item = Item.get_by_id(id) 
@@ -55,7 +50,9 @@ def get_item(req):
   req.res.body = t.fetch() 
 
 def get_collection(req):
-  user = check_user(req)
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'collection.html',TEMPLATE_PATH)
   ascii_id = req.get('ascii_id')
   query = Collection.all()
@@ -70,13 +67,12 @@ def get_collection(req):
   req.res.body = t.fetch() 
 
 def post_to_collection_form(req):
-  user = check_user(req)
   name = req.get('name')
   if name:
     ascii_id = dirify(name)
     collection = Collection(name=name,ascii_id=ascii_id,created_by=user.user_id())
     collection.put()
-  req.redirect(req.uri.server_uri())
+  return req.redirect(req.uri.server_uri())
 
 def post_to_collection(req):
   #creates an item
@@ -87,7 +83,6 @@ def get_401(req):
   req.res.body = 'unauthorized'
 
 def process_upload(req):
-  user = check_user(req)
   coll_ascii = req.form['coll_ascii']
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
@@ -100,10 +95,9 @@ def process_upload(req):
             media_file_mime=blobinfo.content_type,
             media_filename=blobinfo.filename)
         item.put()
-  req.redirect(req.uri.server_uri()+'/collection/'+coll_ascii)
+  return req.redirect(req.uri.server_uri()+'/collection/'+coll_ascii)
 
 def serve_blob(req):
-  user = check_user(req)
   blob_key = req.get("blob_key")
   if blob_key:
     blob_info = blobstore.get(blob_key)

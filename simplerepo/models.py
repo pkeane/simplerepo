@@ -32,6 +32,16 @@ class Collection(db.Model):
       query.filter('coll_ascii_id =',self.ascii_id)
       return query.count() 
  
+  @classmethod
+  def get_list_by_user(self,user):
+    colls = []
+    query = Collection.all()
+    query.filter('created_by =',user.user_id())
+    for result in query:
+      colls.append(result)
+    return colls
+
+
 #allows us to get collection's list of attributes
 class Attribute(db.Model):
   name = db.StringProperty(required=True)
@@ -80,21 +90,3 @@ class ItemMetadata(db.Model):
   #allows search by exact att-val
   #format as <coll_ascii_id>.<att_ascii_id>:<value_text>
   metadata = db.StringListProperty()
-
-class User():
-  def __init__(self,dbuser):
-    self.dbuser = dbuser
-
-  def user_id(self):
-    return self.dbuser.user_id()
-
-  def get_collections(self):
-    colls = []
-    query = Collection.all()
-    query.filter('created_by =',self.dbuser.user_id())
-    for result in query:
-      colls.append(result)
-    return colls
-
-
-
