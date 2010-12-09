@@ -83,6 +83,7 @@ def get_401(req):
   req.res.body = 'unauthorized'
 
 def process_upload(req):
+  user = users.get_current_user()
   coll_ascii = req.form['coll_ascii']
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
