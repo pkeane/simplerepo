@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>My Dropbox Items</h3>
+<ul>
+{% for item in dropbox_items %}
+<li><a href="/dropbox/{{ item.key().id() }}">{{ item.created }}</a></li>
+{% endfor %}
+</ul>
+<h5><a href='javascript:(function(){var href=window.location.href;var form = document.createElement("form");form.setAttribute("method","post");form.setAttribute("action", "http://{{ app_root}}/dropbox");var hiddenField=document.createElement("input");hiddenField.setAttribute("type", "hidden");hiddenField.setAttribute("name","url");hiddenField.setAttribute("value", href);form.appendChild(hiddenField);document.body.appendChild(form);form.submit();alert("url has been posted");})();'>Post to Dropbox Bookmarklet</a></h5>
+{% endblock %}

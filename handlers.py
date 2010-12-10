@@ -18,6 +18,7 @@ from simplerepo import ItemMetadata
 from simplerepo import Template
 from simplerepo import dirify 
 from simplerepo import rfc3339 
+from simplerepo import get_data 
 from yaro import Yaro 
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates')
@@ -50,6 +51,24 @@ def get_item(req):
   t.assign('title','SimpleRepository: Item '+str(id)) 
   req.res.body = t.fetch() 
 
+def get_dropbox(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  t = Template(req,'dropbox.html',TEMPLATE_PATH)
+  t.assign('title','SimpleRepository: Dropbox') 
+  t.assign('dropbox_items',Dropbox.get_list_by_user(user))
+  req.res.body = t.fetch() 
+
+def get_dropbox_item(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  id = int(req.get('id'))
+  dropbox_item = Dropbox.get_by_id(id) 
+  req.res.headers['Content-Type'] = dropbox_item.mime_type
+  req.res.body = dropbox_item.data 
+
 def get_collection(req):
   user = users.get_current_user()
   if not user:
@@ -70,7 +89,8 @@ def get_collection(req):
 def post_to_dropbox(req):
   user = users.get_current_user()
   url = req.get('url')
-  dbox = Dropbox( url=url, owner=user.user_id())
+  (mime_type,data) = get_data(url)
+  dbox = Dropbox( url=url,owner=user.user_id(),mime_type=mime_type,data=data)
   dbox.put()
   return req.redirect(req.uri.server_uri())
 
@@ -151,7 +171,8 @@ def main():
   app.add('/', GET=get_index)  
   app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
   app.add('/item/{id}', GET=get_item)  
-  app.add('/dropbox', POST=post_to_dropbox)  
+  app.add('/dropbox', POST=post_to_dropbox,GET=get_dropbox)  
+  app.add('/dropbox/{id}', GET=get_dropbox_item)  
   app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  

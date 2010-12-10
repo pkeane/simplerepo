@@ -2,6 +2,7 @@ from django.utils import simplejson
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import search
+from google.appengine.api import urlfetch
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 import os
 import re
@@ -14,6 +15,11 @@ def dirify(str):
     str = re.sub('\&amp\;|\&', ' and ', str)
     str = re.sub('[-\s]+', '_', str)
     return re.sub('[^\w\s-]', '', str).strip().lower()
+
+def get_data(url):
+  result = urlfetch.fetch(url=url)
+  mime_type = result.headers['Content-Type']
+  return (mime_type,result.content)
 
 class Template():
   def __init__(self,request,template_name,template_path):
@@ -137,4 +143,17 @@ class ItemMetadata(db.Model):
 class Dropbox(db.Model):
   url = db.StringProperty(required=True)
   owner = db.StringProperty(required=True) 
+  mime_type = db.StringProperty()
+  data = db.BlobProperty()
+  created = db.DateTimeProperty(auto_now_add=True)
+
+  @classmethod
+  def get_list_by_user(self,user):
+    dropbox_items = []
+    query = Dropbox.all()
+    query.filter('owner =',user.user_id())
+    for result in query:
+      dropbox_items.append(result)
+    return dropbox_items 
+
 
