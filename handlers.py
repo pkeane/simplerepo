@@ -12,6 +12,7 @@ from selector import Selector
 from simplerepo.models import Attribute 
 from simplerepo.models import AttributeValues 
 from simplerepo.models import Collection 
+from simplerepo.models import Dropbox 
 from simplerepo.models import Item 
 from simplerepo.models import ItemMetadata 
 from simplerepo.template import Template
@@ -65,6 +66,13 @@ def get_collection(req):
   t.assign('items',c.get_items())
   t.assign('title','SimpleRepository: '+c.name) 
   req.res.body = t.fetch() 
+
+def post_to_dropbox(req):
+  user = users.get_current_user()
+  url = req.get('url')
+  dbox = Dropbox( url=url, owner=user.user_id())
+  dbox.put()
+  return req.redirect(req.uri.server_uri())
 
 def post_to_collection_form(req):
   name = req.get('name')
@@ -143,6 +151,7 @@ def main():
   app.add('/', GET=get_index)  
   app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
   app.add('/item/{id}', GET=get_item)  
+  app.add('/dropbox', POST=post_to_dropbox)  
   app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  

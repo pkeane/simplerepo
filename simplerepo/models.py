@@ -90,3 +90,8 @@ class ItemMetadata(db.Model):
   #allows search by exact att-val
   #format as <coll_ascii_id>.<att_ascii_id>:<value_text>
   metadata = db.StringListProperty()
+
+class Dropbox(db.Model):
+  url = db.StringProperty(required=True)
+  owner = db.StringProperty(required=True) 
+
