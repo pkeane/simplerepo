@@ -9,15 +9,15 @@ from google.appengine.api import users
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp.util import run_wsgi_app 
 from selector import Selector 
-from simplerepo.models import Attribute 
-from simplerepo.models import AttributeValues 
-from simplerepo.models import Collection 
-from simplerepo.models import Dropbox 
-from simplerepo.models import Item 
-from simplerepo.models import ItemMetadata 
-from simplerepo.template import Template
-from simplerepo.utils import dirify 
-from simplerepo.utils import rfc3339 
+from simplerepo import Attribute 
+from simplerepo import AttributeValues 
+from simplerepo import Collection 
+from simplerepo import Dropbox 
+from simplerepo import Item 
+from simplerepo import ItemMetadata 
+from simplerepo import Template
+from simplerepo import dirify 
+from simplerepo import rfc3339 
 from yaro import Yaro 
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates')
