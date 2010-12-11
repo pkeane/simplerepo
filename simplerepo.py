@@ -4,9 +4,12 @@ from google.appengine.ext import db
 from google.appengine.ext import search
 from google.appengine.api import urlfetch
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+import BeautifulSoup
 import os
 import re
 import time
+import urlparse
+import urllib
 
 def rfc3339():
   return time.strftime('%Y-%m-%dT%H:%M:%S%z')
@@ -19,7 +22,18 @@ def dirify(str):
 def get_data(url):
   result = urlfetch.fetch(url=url)
   mime_type = result.headers['Content-Type']
-  return (mime_type,result.content)
+  data = result.content
+  title = ''
+  if 'html' in mime_type:
+    soup = BeautifulSoup.BeautifulSoup(data)
+    title = ''.join(unicode(soup.title.string).splitlines())
+  else:
+    path = urlparse.urlparse(url).path
+    title = path.split('/').pop()
+    title = urllib.unquote(title)
+  if not title:
+    title = 'untitled'
+  return (mime_type,data,title)
 
 class Template():
   def __init__(self,request,template_name,template_path):
@@ -146,6 +160,7 @@ class Dropbox(db.Model):
   mime_type = db.StringProperty()
   data = db.BlobProperty()
   created = db.DateTimeProperty(auto_now_add=True)
+  title = db.StringProperty()
 
   @classmethod
   def get_list_by_user(self,user):

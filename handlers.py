@@ -19,6 +19,7 @@ from simplerepo import Template
 from simplerepo import dirify 
 from simplerepo import rfc3339 
 from simplerepo import get_data 
+import urlparse
 from yaro import Yaro 
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates')
@@ -89,10 +90,14 @@ def get_collection(req):
 def post_to_dropbox(req):
   user = users.get_current_user()
   url = req.get('url')
-  (mime_type,data) = get_data(url)
-  dbox = Dropbox( url=url,owner=user.user_id(),mime_type=mime_type,data=data)
+  try:
+    (mime_type,data,title) = get_data(url)
+  except:
+    req.res.body = 'sorry, could not ingest '+url
+    return
+  dbox = Dropbox( url=url,owner=user.user_id(),mime_type=mime_type,data=data,title=title)
   dbox.put()
-  return req.redirect(req.uri.server_uri())
+  return req.redirect(req.uri.server_uri()+'/dropbox')
 
 def post_to_collection_form(req):
   name = req.get('name')
