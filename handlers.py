@@ -80,6 +80,27 @@ def get_dropbox_item(req):
   req.res.headers['Content-Type'] = dropbox_item.mime_type
   req.res.body = dropbox_item.data 
 
+def get_collections_json(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  set = []
+  for c in Collection.get_list_by_user(user):
+    coll = {}
+    coll['ascii_id'] = c.ascii_id
+    coll['name'] = c.name
+    set.append(coll)
+  req.res.headers['Content-Type'] = 'application/json' 
+  req.res.body = simplejson.dumps(set) 
+
+def get_upload_url(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  ascii_id = req.get('ascii_id')
+  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
+  req.res.body = upload_url 
+
 def get_collection(req):
   user = users.get_current_user()
   if not user:
@@ -112,6 +133,8 @@ def post_to_dropbox(req):
 
 def post_to_notes(req):
   user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   text = req.get('text')
   note = Note(owner=user.user_id(),text=text)
   note.put()
@@ -202,6 +225,7 @@ def main():
   app.add('401', GET=get_401)  
   app.add('', GET=get_index)  
   app.add('/', GET=get_index)  
+  app.add('/collections.json', GET=get_collections_json)  
   app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
   app.add('/item/{id}', GET=get_item)  
   app.add('/dropbox', POST=post_to_dropbox,GET=get_dropbox)  
@@ -213,6 +237,7 @@ def main():
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
   app.add('/serve/{blob_key}', GET=serve_blob)  
   app.add('/collection/{ascii_id}/upload', POST=process_upload)  
+  app.add('/collection/{ascii_id}/upload_url', GET=get_upload_url)  
   run_wsgi_app(app)
 
 if __name__ == '__main__':
