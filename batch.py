@@ -2,8 +2,8 @@
 import getpass
 import sys
 
-sys.path.append("google_appengine")
-sys.path.append("google_appengine/lib/fancy_urllib")
+sys.path.append("/home/pkeane/Desktop/google_appengine")
+sys.path.append("/home/pkeane/Desktop/google_appengine/lib/fancy_urllib")
 
 from google.appengine.tools import appengine_rpc
 
@@ -14,4 +14,14 @@ server = appengine_rpc.HttpRpcServer('simplerepo.appspot.com', auth_func,None,'g
 
 #Send(request_path, payload="", content_type="application/octet-stream")
 
-print server.Send('/notes',None) #None makes it GET, otherwise method is POST
+url = server.Send('/collection/old_time_music/upload_url',None) #None makes it GET, otherwise method is POST
+
+url = url.replace('https://simplerepo.appspot.com','')
+
+data = open('redbox.jpg').read()
+
+print "posting image"
+
+resp = server.Send(url, payload=data, content_type="image/jpeg")
+
+print resp
