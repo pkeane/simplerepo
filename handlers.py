@@ -9,15 +9,17 @@ from google.appengine.api import users
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp.util import run_wsgi_app 
 from selector import Selector 
-from simplerepo.models import Attribute 
-from simplerepo.models import AttributeValues 
-from simplerepo.models import Collection 
-from simplerepo.models import Dropbox 
-from simplerepo.models import Item 
-from simplerepo.models import ItemMetadata 
-from simplerepo.template import Template
-from simplerepo.utils import dirify 
-from simplerepo.utils import rfc3339 
+from simplerepo import Attribute 
+from simplerepo import AttributeValues 
+from simplerepo import Collection 
+from simplerepo import Dropbox 
+from simplerepo import Item 
+from simplerepo import ItemMetadata 
+from simplerepo import Template
+from simplerepo import dirify 
+from simplerepo import rfc3339 
+from simplerepo import get_data 
+import urlparse
 from yaro import Yaro 
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates')
@@ -50,6 +52,24 @@ def get_item(req):
   t.assign('title','SimpleRepository: Item '+str(id)) 
   req.res.body = t.fetch() 
 
+def get_dropbox(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  t = Template(req,'dropbox.html',TEMPLATE_PATH)
+  t.assign('title','SimpleRepository: Dropbox') 
+  t.assign('dropbox_items',Dropbox.get_list_by_user(user))
+  req.res.body = t.fetch() 
+
+def get_dropbox_item(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  id = int(req.get('id'))
+  dropbox_item = Dropbox.get_by_id(id) 
+  req.res.headers['Content-Type'] = dropbox_item.mime_type
+  req.res.body = dropbox_item.data 
+
 def get_collection(req):
   user = users.get_current_user()
   if not user:
@@ -70,9 +90,14 @@ def get_collection(req):
 def post_to_dropbox(req):
   user = users.get_current_user()
   url = req.get('url')
-  dbox = Dropbox( url=url, owner=user.user_id())
+  try:
+    (mime_type,data,title) = get_data(url)
+  except:
+    req.res.body = 'sorry, could not ingest '+url
+    return
+  dbox = Dropbox( url=url,owner=user.user_id(),mime_type=mime_type,data=data,title=title)
   dbox.put()
-  return req.redirect(req.uri.server_uri())
+  return req.redirect(req.uri.server_uri()+'/dropbox')
 
 def post_to_collection_form(req):
   name = req.get('name')
@@ -152,7 +177,8 @@ def main():
   app.add('/', GET=get_index)  
   app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
   app.add('/item/{id}', GET=get_item)  
-  app.add('/dropbox', POST=post_to_dropbox)  
+  app.add('/dropbox', POST=post_to_dropbox,GET=get_dropbox)  
+  app.add('/dropbox/{id}', GET=get_dropbox_item)  
   app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  

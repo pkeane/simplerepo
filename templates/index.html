@@ -9,5 +9,5 @@
 <li><a href="/collection/{{ c.ascii_id }}">{{ c.name }}</a> ({{ c.ascii_id }})</li>
 {% endfor %}
 </ul>
-<a href='javascript:(function(){var href=window.location.href;var form = document.createElement("form");form.setAttribute("method","post");form.setAttribute("action", "http://{{ app_root}}/dropbox");var hiddenField=document.createElement("input");hiddenField.setAttribute("type", "hidden");hiddenField.setAttribute("name","url");hiddenField.setAttribute("value", href);form.appendChild(hiddenField);document.body.appendChild(form);form.submit();alert('url has been posted');})();'>Post to Dropbox</a>
+<a href="/dropbox">My Dropbox</a>
 {% endblock %}

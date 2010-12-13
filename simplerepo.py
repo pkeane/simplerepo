@@ -1,6 +1,69 @@
 from django.utils import simplejson
+from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import search
+from google.appengine.api import urlfetch
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+import BeautifulSoup
+import os
+import re
+import time
+import urlparse
+import urllib
+
+def rfc3339():
+  return time.strftime('%Y-%m-%dT%H:%M:%S%z')
+
+def dirify(str):
+    str = re.sub('\&amp\;|\&', ' and ', str)
+    str = re.sub('[-\s]+', '_', str)
+    return re.sub('[^\w\s-]', '', str).strip().lower()
+
+def get_data(url):
+  result = urlfetch.fetch(url=url)
+  mime_type = result.headers['Content-Type']
+  data = result.content
+  title = ''
+  if 'html' in mime_type:
+    soup = BeautifulSoup.BeautifulSoup(data)
+    title = ''.join(unicode(soup.title.string).splitlines())
+  else:
+    path = urlparse.urlparse(url).path
+    title = path.split('/').pop()
+    title = urllib.unquote(title)
+  if not title:
+    title = 'untitled'
+  return (mime_type,data,title)
+
+class Template():
+  def __init__(self,request,template_name,template_path):
+    self.template_name = template_name
+    self.request = request
+    self.template_path = template_path
+    self.vars = {}
+
+  def assign(self,key,val):
+    self.vars[key] = val
+
+  def fetch(self):
+    values = {
+      'request': self.request,
+      'user': users.GetCurrentUser(),
+      'login_url': users.CreateLoginURL(self.request.uri.application_uri()),
+      'logout_url': users.CreateLogoutURL(self.request.uri.server_uri() + '/'),
+      'debug': self.request.get('deb'), 
+      'application_name': 'SimpleRepository',
+    }
+    self.vars.update(values)
+    template_dirs = []
+    #template_dirs.append(os.path.join(os.path.dirname(__file__), 'templates'))
+    template_dirs.append(self.template_path)
+    env = Environment(loader = FileSystemLoader(template_dirs))
+    try:
+      template = env.get_template(self.template_name)
+    except TemplateNotFound:
+      raise TemplateNotFound(self.template_name)
+    return template.render(self.vars)
 
 """
 queries needed:
@@ -94,4 +157,18 @@ class ItemMetadata(db.Model):
 class Dropbox(db.Model):
   url = db.StringProperty(required=True)
   owner = db.StringProperty(required=True) 
+  mime_type = db.StringProperty()
+  data = db.BlobProperty()
+  created = db.DateTimeProperty(auto_now_add=True)
+  title = db.StringProperty()
+
+  @classmethod
+  def get_list_by_user(self,user):
+    dropbox_items = []
+    query = Dropbox.all()
+    query.filter('owner =',user.user_id())
+    for result in query:
+      dropbox_items.append(result)
+    return dropbox_items 
+
 
