@@ -15,3 +15,10 @@ indexes:
   - name: coll_ascii
   - name: created
     direction: desc
+
+- kind: Note
+  properties:
+  - name: owner
+  - name: created
+    direction: desc
+

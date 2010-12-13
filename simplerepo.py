@@ -161,6 +161,7 @@ class Dropbox(db.Model):
   data = db.BlobProperty()
   created = db.DateTimeProperty(auto_now_add=True)
   title = db.StringProperty()
+  note = db.StringProperty()
 
   @classmethod
   def get_list_by_user(self,user):
@@ -170,5 +171,20 @@ class Dropbox(db.Model):
     for result in query:
       dropbox_items.append(result)
     return dropbox_items 
+
+class Note(db.Model):
+  owner = db.StringProperty(required=True) 
+  created = db.DateTimeProperty(auto_now_add=True)
+  text = db.StringProperty()
+
+  @classmethod
+  def get_list_by_user(self,user):
+    notes = []
+    query = Note.all()
+    query.filter('owner =',user.user_id())
+    query.order('-created')
+    for result in query:
+      notes.append(result)
+    return notes 
 
 

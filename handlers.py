@@ -15,6 +15,7 @@ from simplerepo import Collection
 from simplerepo import Dropbox 
 from simplerepo import Item 
 from simplerepo import ItemMetadata 
+from simplerepo import Note 
 from simplerepo import Template
 from simplerepo import dirify 
 from simplerepo import rfc3339 
@@ -50,6 +51,15 @@ def get_item(req):
   item = Item.get_by_id(id) 
   t.assign('item',item)
   t.assign('title','SimpleRepository: Item '+str(id)) 
+  req.res.body = t.fetch() 
+
+def get_notes(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  t = Template(req,'notes.html',TEMPLATE_PATH)
+  t.assign('title','SimpleRepository: Notes') 
+  t.assign('notes',Note.get_list_by_user(user))
   req.res.body = t.fetch() 
 
 def get_dropbox(req):
@@ -89,15 +99,32 @@ def get_collection(req):
 
 def post_to_dropbox(req):
   user = users.get_current_user()
+  note = req.get('note')
   url = req.get('url')
   try:
     (mime_type,data,title) = get_data(url)
   except:
     req.res.body = 'sorry, could not ingest '+url
     return
-  dbox = Dropbox( url=url,owner=user.user_id(),mime_type=mime_type,data=data,title=title)
+  dbox = Dropbox( url=url,note=note,owner=user.user_id(),mime_type=mime_type,data=data,title=title)
   dbox.put()
   return req.redirect(req.uri.server_uri()+'/dropbox')
+
+def post_to_notes(req):
+  user = users.get_current_user()
+  text = req.get('text')
+  note = Note(owner=user.user_id(),text=text)
+  note.put()
+  return req.redirect(req.uri.server_uri()+'/notes')
+
+def delete_note(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  id = int(req.get('id'))
+  note = Note.get_by_id(id) 
+  note.delete()
+  return req.redirect(req.uri.server_uri()+'/notes')
 
 def post_to_collection_form(req):
   name = req.get('name')
@@ -178,6 +205,8 @@ def main():
   app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
   app.add('/item/{id}', GET=get_item)  
   app.add('/dropbox', POST=post_to_dropbox,GET=get_dropbox)  
+  app.add('/notes', POST=post_to_notes,GET=get_notes)  
+  app.add('/note/{id}', DELETE=delete_note)  
   app.add('/dropbox/{id}', GET=get_dropbox_item)  
   app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  

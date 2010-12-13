@@ -5,8 +5,9 @@
 <h3>My Dropbox Items</h3>
 <ul>
 {% for item in dropbox_items %}
-<li><a href="/dropbox/{{ item.key().id() }}">{{ item.title }}</a> ({{ item.created }})</li>
+<li><a href="/dropbox/{{ item.key().id() }}">{{ item.title }}</a> ({{ item.created }})
+<br>[{{ item.note }}]</li>
 {% endfor %}
 </ul>
-<h5><a href='javascript:(function(){href=window.location.href;form=document.createElement("form");form.setAttribute("method","post");form.setAttribute("action","{{ request.uri.server_uri() }}/dropbox");hiddenField=document.createElement("input");hiddenField.setAttribute("type", "hidden");hiddenField.setAttribute("name","url");hiddenField.setAttribute("value",href);form.appendChild(hiddenField);document.body.appendChild(form);form.submit();alert("url has been posted");})();'>Post to Dropbox Bookmarklet</a></h5>
+<h5><a href='javascript:(function(){note=prompt("note");href=window.location.href;form=document.createElement("form");form.setAttribute("method","post");form.setAttribute("action","{{ request.uri.server_uri() }}/dropbox");hiddenField=document.createElement("input");hiddenField.setAttribute("type", "hidden");hiddenField.setAttribute("name","url");hiddenField.setAttribute("value",href);form.appendChild(hiddenField);hiddenField2=document.createElement("input");hiddenField2.setAttribute("type", "hidden");hiddenField2.setAttribute("name","note");hiddenField2.setAttribute("value",note);form.appendChild(hiddenField2);document.body.appendChild(form);form.submit();alert("url has been posted");})();'>Post to Dropbox Bookmarklet</a></h5>
 {% endblock %}

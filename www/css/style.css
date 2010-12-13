@@ -89,3 +89,8 @@ ul.grid li h4 {
   font-family: Verdana;
   font-size: 11px;
 }
+
+a.delete {
+  color: red;
+  font-size: 11px;
+}

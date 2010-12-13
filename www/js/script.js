@@ -2,6 +2,7 @@ var Dase = {};
 
 $(document).ready(function() {
 	Dase.initAjaxForm();
+	Dase.initDelete('notes');
 });
 
 Dase.initAjaxForm = function() {
