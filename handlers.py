@@ -59,7 +59,7 @@ def get_collection(req):
   query = Collection.all()
   query.filter('ascii_id =',ascii_id)
   c = query.fetch(1)[0]
-  upload_url = blobstore.create_upload_url('/upload')
+  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
 
   t.assign('upload_url',upload_url)
   t.assign('c',c)
@@ -92,7 +92,8 @@ def get_401(req):
 
 def process_upload(req):
   user = users.get_current_user()
-  coll_ascii = req.form['coll_ascii']
+  #coll_ascii = req.form['coll_ascii']
+  coll_ascii = req.get('ascii_id')
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
       if 'blob-key' in value.type_options:
@@ -156,7 +157,7 @@ def main():
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
   app.add('/serve/{blob_key}', GET=serve_blob)  
-  app.add('/upload', POST=process_upload)  
+  app.add('/collection/{ascii_id}/upload', POST=process_upload)  
   run_wsgi_app(app)
 
 if __name__ == '__main__':
