@@ -110,7 +110,7 @@ def get_collection(req):
   query = Collection.all()
   query.filter('ascii_id =',ascii_id)
   c = query.fetch(1)[0]
-  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload/'+user.user_id())
+  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/formupload/'+user.user_id())
 
   t.assign('upload_url',upload_url)
   t.assign('c',c)
@@ -169,6 +169,24 @@ def get_401(req):
   req.res.body = 'unauthorized'
 
 def process_upload(req):
+  coll_ascii = req.get('ascii_id')
+  user_id = req.get('user_id')
+  filename = ''
+  for key,value in req.form.items():
+    if isinstance(value, cgi.FieldStorage):
+      if 'blob-key' in value.type_options:
+        blobinfo = blobstore.parse_blob_info(value)
+        filename = blobinfo.filename
+        item = Item(
+            coll_ascii=coll_ascii,
+            created_by=user_id,
+            media_file_key=str(blobinfo.key()),
+            media_file_mime=blobinfo.content_type,
+            media_filename=blobinfo.filename)
+        item.put()
+  req.res.body = 'uploaded '+filename 
+
+def process_formupload(req):
   coll_ascii = req.get('ascii_id')
   user_id = req.get('user_id')
   for key,value in req.form.items():
@@ -239,6 +257,7 @@ def main():
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
   app.add('/serve/{blob_key}', GET=serve_blob)  
   app.add('/collection/{ascii_id}/upload/{user_id}', POST=process_upload)  
+  app.add('/collection/{ascii_id}/formupload/{user_id}', POST=process_formupload)  
   app.add('/collection/{ascii_id}/upload_url', GET=get_upload_url)  
   run_wsgi_app(app)
 

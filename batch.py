@@ -6,6 +6,7 @@ import urllib2
 
 sys.path.append("/home/pkeane/Desktop/google_appengine")
 sys.path.append("/home/pkeane/Desktop/google_appengine/lib/fancy_urllib")
+sys.path.append("/home/pkeane/Desktop/google_appengine/lib/yaml/lib")
 
 from google.appengine.tools import appengine_rpc
 
@@ -54,5 +55,4 @@ print "posting image"
 
 (content_type,payload) = encode_multipart_formdata(fields, files)
 
-#server.opener.add_handler(urllib2.HTTPRedirectHandler())
-server.Send(url,payload=payload,content_type=content_type)
+print server.Send(url,payload=payload,content_type=content_type)
