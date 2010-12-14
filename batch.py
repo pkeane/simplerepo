@@ -2,6 +2,7 @@
 import getpass
 import mimetypes
 import sys
+import urllib2
 
 sys.path.append("/home/pkeane/Desktop/google_appengine")
 sys.path.append("/home/pkeane/Desktop/google_appengine/lib/fancy_urllib")
@@ -53,8 +54,5 @@ print "posting image"
 
 (content_type,payload) = encode_multipart_formdata(fields, files)
 
-#will emit error on 302, so wrap it
-try:
-  server.Send(url,payload=payload,content_type=content_type)
-except:
-  print "done" 
+#server.opener.add_handler(urllib2.HTTPRedirectHandler())
+server.Send(url,payload=payload,content_type=content_type)
