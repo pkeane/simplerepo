@@ -98,7 +98,7 @@ def get_upload_url(req):
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
   ascii_id = req.get('ascii_id')
-  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
+  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload/'+user.user_id())
   req.res.body = upload_url 
 
 def get_collection(req):
@@ -110,7 +110,7 @@ def get_collection(req):
   query = Collection.all()
   query.filter('ascii_id =',ascii_id)
   c = query.fetch(1)[0]
-  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
+  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload/'+user.user_id())
 
   t.assign('upload_url',upload_url)
   t.assign('c',c)
@@ -150,6 +150,9 @@ def delete_note(req):
   return req.redirect(req.uri.server_uri()+'/notes')
 
 def post_to_collection_form(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   name = req.get('name')
   if name:
     ascii_id = dirify(name)
@@ -166,16 +169,15 @@ def get_401(req):
   req.res.body = 'unauthorized'
 
 def process_upload(req):
-  user = users.get_current_user()
-  #coll_ascii = req.form['coll_ascii']
   coll_ascii = req.get('ascii_id')
+  user_id = req.get('user_id')
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
       if 'blob-key' in value.type_options:
         blobinfo = blobstore.parse_blob_info(value)
         item = Item(
             coll_ascii=coll_ascii,
-            created_by=user.user_id(),
+            created_by=user_id,
             media_file_key=str(blobinfo.key()),
             media_file_mime=blobinfo.content_type,
             media_filename=blobinfo.filename)
@@ -236,7 +238,7 @@ def main():
   app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
   app.add('/serve/{blob_key}', GET=serve_blob)  
-  app.add('/collection/{ascii_id}/upload', POST=process_upload)  
+  app.add('/collection/{ascii_id}/upload/{user_id}', POST=process_upload)  
   app.add('/collection/{ascii_id}/upload_url', GET=get_upload_url)  
   run_wsgi_app(app)
 
