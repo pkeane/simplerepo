@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h3>My Dropbox Items</h3>
+<h2>My Dropbox Items</h2>
 <ul>
 {% for item in dropbox_items %}
 <li><a href="/dropbox/{{ item.key().id() }}">{{ item.title }}</a> ({{ item.created }})

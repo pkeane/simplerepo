@@ -1,44 +1,59 @@
 body {
-	/*
-	font-family: "Georgia", serif;
-	*/
-	font-family: "Cantarell", sans-serif;
+	font-family: verdana, sans-serif;
 	background-color: #fff;
-	border-top: 0px solid #003;
-}
-
-div#login {
-  padding: 2px 8px;
-  margin: 0;
-}
-
-div#container {
-	margin: 20px auto;
-	width: 800px;
+	margin:0px; 
 }
 
 div#header {
-	background-color: #fff;
-	color: #000;
+	padding: 3px 0px 5px 0px;
 	margin: 0px auto;
-	padding: 0px;
-	width: 800px;
-	border-bottom: 8px solid #ccc;
+	width: 85%;
+	color: #000;
+	background-color: #e8cc00;
+	line-height: 12pt;
 }
 
-h1, h2, h3, h4 {
-	font-family: Vollkorn, serif;
+div#header a {
+	color: #494000;
+	color: #666031;
+	color: #6e6949;
+	color: #5e5939;
 }
 
 div#header h1 {
-	font-size: 40px;
-	color: #444;
+	font-size: 10pt;
+	letter-spacing: .25px;	
+	float: left;
+	margin-right: 12px;
+	margin-left: 8px;
+}
+
+div#login {
+	float: right;
+	margin-right: 8px;
+}
+
+div#container {
+	background-color: #fff;
+	margin: 12px auto;
+	width: 85%;
+}
+
+#content  {
+	margin: 8px;
+}
+
+h1, h2, h3, h4 {
+	/*
+	font-family: Vollkorn, sans-serif;
+	 */
 }
 
 label {
 	display: block;
 	font-weight: bold;
-	font-size: 14px;
+	font-size: 11px;
+	color: #666;
 }
 
 #footer {
@@ -47,15 +62,17 @@ label {
 
 form {
 	margin: 20px 0;
-	padding: 12px;
-	border: 1px solid #666;
+	padding: 10px;
+	border: 0px solid #666;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
+	background-color: #ddd;
 }
 
-form h2 {
-  margin: 10px 0;
+form h3 {
+	margin: 0px 0 6px 0;
+	color: #000;
 }
 
 textarea {
@@ -65,32 +82,38 @@ textarea {
 }
 
 ul {
-  margin: 10px 0;
+	margin: 10px 0;
 }
 
 ul li{
-  margin: 5px 0;
+	margin: 5px 0;
 }
 
 ul.grid li {
-  float:left;
-  height: 120px;
-  width: 136px;
-  text-align: center;
-  padding: 10px;
-  border: 1px solid #ddd;
-  margin: 0;
-  margin-top: 2px;
-  margin-right: 2px;
+	float:left;
+	height: 120px;
+	width: 136px;
+	text-align: center;
+	padding: 10px;
+	border: 1px solid #ddd;
+	margin: 0;
+	margin-top: 2px;
+	margin-right: 2px;
 }
 
 ul.grid li h4 {
-  margin-top: 3px;
-  font-family: Verdana;
-  font-size: 11px;
+	margin-top: 3px;
+	font-family: Verdana;
+	font-size: 11px;
 }
 
 a.delete {
-  color: red;
-  font-size: 11px;
+	color: red;
+	font-size: 11px;
+}
+
+.controls {
+	float: right;
+	margin-right: 0;
+	margin-top: 2px;
 }

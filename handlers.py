@@ -111,10 +111,50 @@ def get_collection(req):
   query.filter('ascii_id =',ascii_id)
   c = query.fetch(1)[0]
   upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
-
   t.assign('upload_url',upload_url)
   t.assign('c',c)
   t.assign('items',c.get_items())
+  t.assign('title','SimpleRepository: '+c.name) 
+  req.res.body = t.fetch() 
+
+def get_attribute(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  t = Template(req,'attribute.html',TEMPLATE_PATH)
+  coll_ascii = req.get('coll_ascii')
+  ascii_id = req.get('ascii_id')
+  query = Attribute.all()
+  query.filter('coll_ascii =',coll_ascii)
+  query.filter('ascii_id =',ascii_id)
+  att = query.fetch(1)[0]
+  t.assign('att',att)
+  req.res.body = t.fetch() 
+
+def delete_collection(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  ascii_id = req.get('ascii_id')
+  query = Collection.all()
+  query.filter('ascii_id =',ascii_id)
+  c = query.fetch(1)[0]
+  c.full_delete()
+
+def manage_collection(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  t = Template(req,'manage_collection.html',TEMPLATE_PATH)
+  ascii_id = req.get('ascii_id')
+  query = Collection.all()
+  query.filter('ascii_id =',ascii_id)
+  if not query.count():
+      return req.redirect(req.uri.server_uri())
+  c = query.fetch(1)[0]
+  t.assign('c',c)
+  t.assign('items_count',c.get_items_count())
+  t.assign('attributes',c.get_attributes())
   t.assign('title','SimpleRepository: '+c.name) 
   req.res.body = t.fetch() 
 
@@ -150,12 +190,31 @@ def delete_note(req):
   return req.redirect(req.uri.server_uri()+'/notes')
 
 def post_to_collection_form(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
   name = req.get('name')
   if name:
     ascii_id = dirify(name)
+    if Collection.exists(ascii_id):
+      return req.redirect(req.uri.application_uri())
     collection = Collection(name=name,ascii_id=ascii_id,created_by=user.user_id())
     collection.put()
   return req.redirect(req.uri.server_uri())
+
+def post_to_attributes(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  name = req.get('name')
+  coll = req.get('ascii_id')
+  if name:
+    ascii_id = dirify(name)
+    if Attribute.exists(coll,ascii_id):
+      return req.redirect(req.uri.application_uri())
+    att = Attribute(name=name,ascii_id=ascii_id,coll_ascii=coll,values_count=0)
+    att.put()
+  return req.redirect(req.uri.application_uri())
 
 def post_to_collection(req):
   #creates an item
@@ -193,12 +252,6 @@ def serve_blob(req):
       req.res.headers[blobstore.BLOB_KEY_HEADER] = blob_key
       req.res.body = 'ok'
 
-def get_hello(req):
-  t = Template(req,'hello.html',TEMPLATE_PATH)
-  t.assign('name',req.get('name')) 
-  t.assign('title','SimpleRepository') 
-  req.res.body = t.fetch() 
-
 def get_thumbnail(req):
   blob_key = req.get("blob_key")
   width = req.get('width')
@@ -217,9 +270,6 @@ def get_thumbnail(req):
       req.res.headers['Content-Type'] = 'image/jpeg'
       req.res.body = thumbnail
 
-def delete_hello(req):
-  pass
-
 def main():
   app = Selector(wrap=Yaro)  
   app.add('401', GET=get_401)  
@@ -232,10 +282,12 @@ def main():
   app.add('/notes', POST=post_to_notes,GET=get_notes)  
   app.add('/note/{id}', DELETE=delete_note)  
   app.add('/dropbox/{id}', GET=get_dropbox_item)  
-  app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection)  
-  app.add('/hello/{name}', GET=get_hello,DELETE=delete_hello)  
+  app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection,DELETE=delete_collection)  
+  app.add('/collection/{ascii_id}/manage', GET=manage_collection,POST=post_to_attributes)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
   app.add('/serve/{blob_key}', GET=serve_blob)  
+  app.add('/attribute/{coll_ascii}/{ascii_id}',
+          GET=get_attribute,DELETE=delete_attribute)  
   app.add('/collection/{ascii_id}/upload', POST=process_upload)  
   app.add('/collection/{ascii_id}/upload_url', GET=get_upload_url)  
   run_wsgi_app(app)

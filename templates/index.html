@@ -2,13 +2,14 @@
 
 {% block content %}
 
-<h3>My Collections</h3>
-(<a href="collection/form">create a collection</a>)
+<div class="controls">
+<a href="collection/form">create a collection</a>
+</div>
+
+<h2>My Collections</h2>
 <ul>
 {% for c in collections %}
-<li><a href="/collection/{{ c.ascii_id }}">{{ c.name }}</a> ({{ c.ascii_id }})</li>
+<li><a href="/collection/{{ c.ascii_id }}">{{ c.name }}</a> ({{ c.items_count }} items)</li>
 {% endfor %}
 </ul>
-<a href="/dropbox">My Dropbox</a> |
-<a href="/notes">My Notes</a>
 {% endblock %}

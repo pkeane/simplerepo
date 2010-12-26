@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ c.name }}</h1>
+<div class="controls">
+	<a href="/collection/{{ c.ascii_id }}/manage">manage collection</a>
+</div>
+
+<h2>Collection: {{ c.name }}</h2>
 <form action="{{ upload_url }}" method="POST" enctype="multipart/form-data">
   <label for="file">Upload File:</label>
   <input type="hidden" name="coll_ascii" value="{{ c.ascii_id }}">

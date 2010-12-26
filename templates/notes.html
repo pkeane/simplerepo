@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h3>My Notes</h3>
+<h2>My Notes</h2>
 <ul id="notes">
 {% for note in notes %}
 <li>{{ note.text }} <a href="note/{{ note.key().id() }}" class="delete">[delete]</a></li>

@@ -90,9 +90,25 @@ class Collection(db.Model):
           items.append(result)
       return items
 
+  def get_attributes(self):
+      atts = []
+      query = Attribute.all()
+      query.filter('coll_ascii =',self.ascii_id)
+      query.order('sort_order')
+      for result in query:
+          atts.append(result)
+      return atts 
+
+  def full_delete(self):
+      for item in self.get_items():
+          item.delete()
+      for att in self.get_attributes():
+          att.delete()
+      self.delete()
+
   def get_items_count(self):
-      query = Items.all()
-      query.filter('coll_ascii_id =',self.ascii_id)
+      query = Item.all()
+      query.filter('coll_ascii =',self.ascii_id)
       return query.count() 
  
   @classmethod
@@ -100,10 +116,16 @@ class Collection(db.Model):
     colls = []
     query = Collection.all()
     query.filter('created_by =',user.user_id())
-    for result in query:
-      colls.append(result)
+    for c in query:
+      c.items_count = c.get_items_count()
+      colls.append(c)
     return colls
 
+  @classmethod
+  def exists(self,ascii_id):
+    query = Collection.all()
+    query.filter('ascii_id =',ascii_id)
+    return query.count()
 
 #allows us to get collection's list of attributes
 class Attribute(db.Model):
@@ -111,6 +133,14 @@ class Attribute(db.Model):
   ascii_id = db.StringProperty(required=True)
   coll_ascii = db.StringProperty(required=True)
   values_count = db.IntegerProperty(indexed=False)
+  sort_order = db.IntegerProperty(default=99)
+
+  @classmethod
+  def exists(self,coll_ascii,ascii_id):
+    query = Attribute.all()
+    query.filter('ascii_id =',ascii_id)
+    query.filter('coll_ascii =',coll_ascii)
+    return query.count()
 
 #when putting, pass in an attribute as parent
 #grab all values for an attribute by using ANCESTOR_IS clause
