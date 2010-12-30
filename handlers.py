@@ -169,12 +169,30 @@ def get_401(req):
 
 def process_upload(req):
   user = users.get_current_user()
+  filename = ''
+  for key,value in req.form.items():
+    if isinstance(value, cgi.FieldStorage):
+      if 'blob-key' in value.type_options:
+        blobinfo = blobstore.parse_blob_info(value)
+        filename = blobinfo.filename
+        item = Item(
+            coll_ascii=coll_ascii,
+            created_by=user_id,
+            media_file_key=str(blobinfo.key()),
+            media_file_mime=blobinfo.content_type,
+            media_filename=blobinfo.filename)
+        item.put()
+  req.res.body = 'uploaded '+filename 
+
+def process_formupload(req):
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
       if 'blob-key' in value.type_options:
         blobinfo = blobstore.parse_blob_info(value)
         item = Item(
             created_by=user.user_id(),
+            coll_ascii=coll_ascii,
+            created_by=user_id,
             media_file_key=str(blobinfo.key()),
             media_file_mime=blobinfo.content_type,
             media_filename=blobinfo.filename)
