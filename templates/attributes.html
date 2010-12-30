@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Attributes</h2>
+
+<form method="POST">
+	<h3>New Attribute</h3>
+	<label for="name">Name:</label>
+	<input type="text" name="name">
+	<input type="submit" name="submit" value="Submit"> 
+</form>
+
+<ul>
+{% for attribute in attributes %}
+<li>
+<a href="/attribute/{{ attribute.ascii_id }}">{{ attribute.name }}</a>
+</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
+

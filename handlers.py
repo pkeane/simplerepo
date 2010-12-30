@@ -11,7 +11,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from selector import Selector 
 from simplerepo import Attribute 
 from simplerepo import AttributeValues 
-from simplerepo import Collection 
 from simplerepo import Dropbox 
 from simplerepo import Item 
 from simplerepo import ItemMetadata 
@@ -30,16 +29,12 @@ def get_index(req):
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'index.html',TEMPLATE_PATH)
-  t.assign('title','SimpleRepository') 
-  t.assign('collections',Collection.get_list_by_user(user))
-  req.res.body = t.fetch() 
-
-def get_collection_form(req):
-  user = users.get_current_user()
-  if not user:
-      return req.redirect(users.create_login_url(req.uri.application_uri()))
-  t = Template(req,'collection_form.html',TEMPLATE_PATH)
-  t.assign('title','SimpleRepository: Collection Form') 
+  upload_url = blobstore.create_upload_url('/upload')
+  t.assign('upload_url',upload_url)
+  query = Item.all()
+  items = query.fetch(1000)
+  t.assign('items',items)
+  t.assign('title','SimpleRepository: Items') 
   req.res.body = t.fetch() 
 
 def get_item(req):
@@ -51,6 +46,17 @@ def get_item(req):
   item = Item.get_by_id(id) 
   t.assign('item',item)
   t.assign('title','SimpleRepository: Item '+str(id)) 
+  req.res.body = t.fetch() 
+
+def get_attributes(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  t = Template(req,'attributes.html',TEMPLATE_PATH)
+  query = Attribute.all()
+  atts = query.fetch(1000)
+  t.assign('attributes',atts)
+  t.assign('title','SimpleRepository: Attributes') 
   req.res.body = t.fetch() 
 
 def get_notes(req):
@@ -80,83 +86,38 @@ def get_dropbox_item(req):
   req.res.headers['Content-Type'] = dropbox_item.mime_type
   req.res.body = dropbox_item.data 
 
-def get_collections_json(req):
-  user = users.get_current_user()
-  if not user:
-      return req.redirect(users.create_login_url(req.uri.application_uri()))
-  set = []
-  for c in Collection.get_list_by_user(user):
-    coll = {}
-    coll['ascii_id'] = c.ascii_id
-    coll['name'] = c.name
-    set.append(coll)
-  req.res.headers['Content-Type'] = 'application/json' 
-  req.res.body = simplejson.dumps(set) 
+def get_items_json(req):
+    pass
 
 def get_upload_url(req):
   user = users.get_current_user()
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
-  ascii_id = req.get('ascii_id')
-  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
+  upload_url = blobstore.create_upload_url('/upload')
   req.res.body = upload_url 
-
-def get_collection(req):
-  user = users.get_current_user()
-  if not user:
-      return req.redirect(users.create_login_url(req.uri.application_uri()))
-  t = Template(req,'collection.html',TEMPLATE_PATH)
-  ascii_id = req.get('ascii_id')
-  query = Collection.all()
-  query.filter('ascii_id =',ascii_id)
-  c = query.fetch(1)[0]
-  upload_url = blobstore.create_upload_url('/collection/'+ascii_id+'/upload')
-  t.assign('upload_url',upload_url)
-  t.assign('c',c)
-  t.assign('items',c.get_items())
-  t.assign('title','SimpleRepository: '+c.name) 
-  req.res.body = t.fetch() 
 
 def get_attribute(req):
   user = users.get_current_user()
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'attribute.html',TEMPLATE_PATH)
-  coll_ascii = req.get('coll_ascii')
   ascii_id = req.get('ascii_id')
   query = Attribute.all()
-  query.filter('coll_ascii =',coll_ascii)
   query.filter('ascii_id =',ascii_id)
   att = query.fetch(1)[0]
   t.assign('att',att)
   req.res.body = t.fetch() 
 
-def delete_collection(req):
+def delete_attribute(req):
   user = users.get_current_user()
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
   ascii_id = req.get('ascii_id')
-  query = Collection.all()
+  query = Attribute.all()
   query.filter('ascii_id =',ascii_id)
-  c = query.fetch(1)[0]
-  c.full_delete()
-
-def manage_collection(req):
-  user = users.get_current_user()
-  if not user:
-      return req.redirect(users.create_login_url(req.uri.application_uri()))
-  t = Template(req,'manage_collection.html',TEMPLATE_PATH)
-  ascii_id = req.get('ascii_id')
-  query = Collection.all()
-  query.filter('ascii_id =',ascii_id)
-  if not query.count():
-      return req.redirect(req.uri.server_uri())
-  c = query.fetch(1)[0]
-  t.assign('c',c)
-  t.assign('items_count',c.get_items_count())
-  t.assign('attributes',c.get_attributes())
-  t.assign('title','SimpleRepository: '+c.name) 
-  req.res.body = t.fetch() 
+  att = query.fetch(1)[0]
+  #full delete???
+  att.delete()
 
 def post_to_dropbox(req):
   user = users.get_current_user()
@@ -189,36 +150,18 @@ def delete_note(req):
   note.delete()
   return req.redirect(req.uri.server_uri()+'/notes')
 
-def post_to_collection_form(req):
-  user = users.get_current_user()
-  if not user:
-      return req.redirect(users.create_login_url(req.uri.application_uri()))
-  name = req.get('name')
-  if name:
-    ascii_id = dirify(name)
-    if Collection.exists(ascii_id):
-      return req.redirect(req.uri.application_uri())
-    collection = Collection(name=name,ascii_id=ascii_id,created_by=user.user_id())
-    collection.put()
-  return req.redirect(req.uri.server_uri())
-
 def post_to_attributes(req):
   user = users.get_current_user()
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
   name = req.get('name')
-  coll = req.get('ascii_id')
   if name:
     ascii_id = dirify(name)
-    if Attribute.exists(coll,ascii_id):
+    if Attribute.exists(ascii_id):
       return req.redirect(req.uri.application_uri())
-    att = Attribute(name=name,ascii_id=ascii_id,coll_ascii=coll,values_count=0)
+    att = Attribute(name=name,ascii_id=ascii_id,values_count=0)
     att.put()
   return req.redirect(req.uri.application_uri())
-
-def post_to_collection(req):
-  #creates an item
-  pass
 
 def get_401(req):
   req.res.status = '401 Unauthorized'
@@ -226,20 +169,17 @@ def get_401(req):
 
 def process_upload(req):
   user = users.get_current_user()
-  #coll_ascii = req.form['coll_ascii']
-  coll_ascii = req.get('ascii_id')
   for key,value in req.form.items():
     if isinstance(value, cgi.FieldStorage):
       if 'blob-key' in value.type_options:
         blobinfo = blobstore.parse_blob_info(value)
         item = Item(
-            coll_ascii=coll_ascii,
             created_by=user.user_id(),
             media_file_key=str(blobinfo.key()),
             media_file_mime=blobinfo.content_type,
             media_filename=blobinfo.filename)
         item.put()
-  return req.redirect(req.uri.server_uri()+'/collection/'+coll_ascii)
+  return req.redirect(req.uri.server_uri())
 
 def serve_blob(req):
   blob_key = req.get("blob_key")
@@ -275,21 +215,19 @@ def main():
   app.add('401', GET=get_401)  
   app.add('', GET=get_index)  
   app.add('/', GET=get_index)  
-  app.add('/collections.json', GET=get_collections_json)  
-  app.add('/collection/form', GET=get_collection_form,POST=post_to_collection_form)  
+  app.add('/items.json', GET=get_items_json)  
+  app.add('/items', GET=get_item)  
   app.add('/item/{id}', GET=get_item)  
   app.add('/dropbox', POST=post_to_dropbox,GET=get_dropbox)  
   app.add('/notes', POST=post_to_notes,GET=get_notes)  
   app.add('/note/{id}', DELETE=delete_note)  
   app.add('/dropbox/{id}', GET=get_dropbox_item)  
-  app.add('/collection/{ascii_id}', GET=get_collection,POST=post_to_collection,DELETE=delete_collection)  
-  app.add('/collection/{ascii_id}/manage', GET=manage_collection,POST=post_to_attributes)  
   app.add('/thumbnail/{blob_key}', GET=get_thumbnail)  
   app.add('/serve/{blob_key}', GET=serve_blob)  
-  app.add('/attribute/{coll_ascii}/{ascii_id}',
-          GET=get_attribute,DELETE=delete_attribute)  
-  app.add('/collection/{ascii_id}/upload', POST=process_upload)  
-  app.add('/collection/{ascii_id}/upload_url', GET=get_upload_url)  
+  app.add('/attributes', GET=get_attributes,POST=post_to_attributes)  
+  app.add('/attribute/{ascii_id}', GET=get_attribute,DELETE=delete_attribute)  
+  app.add('/upload', POST=process_upload)  
+  app.add('/upload_url', GET=get_upload_url)  
   run_wsgi_app(app)
 
 if __name__ == '__main__':
