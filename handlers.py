@@ -29,9 +29,10 @@ def get_index(req):
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
   t = Template(req,'index.html',TEMPLATE_PATH)
-  upload_url = blobstore.create_upload_url('/upload')
+  upload_url = blobstore.create_upload_url('/formupload/'+user.user_id())
   t.assign('upload_url',upload_url)
   query = Item.all()
+  query.order("-created")
   items = query.fetch(1000)
   t.assign('items',items)
   t.assign('title','SimpleRepository: Items') 
@@ -93,7 +94,14 @@ def get_upload_url(req):
   user = users.get_current_user()
   if not user:
       return req.redirect(users.create_login_url(req.uri.application_uri()))
-  upload_url = blobstore.create_upload_url('/upload')
+  upload_url = blobstore.create_upload_url('/upload/'+user.user_id())
+  req.res.body = upload_url 
+
+def get_formupload_url(req):
+  user = users.get_current_user()
+  if not user:
+      return req.redirect(users.create_login_url(req.uri.application_uri()))
+  upload_url = blobstore.create_upload_url('/upload/'+user.user_id())
   req.res.body = upload_url 
 
 def get_attribute(req):
@@ -176,8 +184,7 @@ def process_upload(req):
         blobinfo = blobstore.parse_blob_info(value)
         filename = blobinfo.filename
         item = Item(
-            coll_ascii=coll_ascii,
-            created_by=user_id,
+            created_by=req.get("user_id"),
             media_file_key=str(blobinfo.key()),
             media_file_mime=blobinfo.content_type,
             media_filename=blobinfo.filename)
@@ -190,14 +197,12 @@ def process_formupload(req):
       if 'blob-key' in value.type_options:
         blobinfo = blobstore.parse_blob_info(value)
         item = Item(
-            created_by=user.user_id(),
-            coll_ascii=coll_ascii,
-            created_by=user_id,
+            created_by=req.get("user_id"),
             media_file_key=str(blobinfo.key()),
             media_file_mime=blobinfo.content_type,
             media_filename=blobinfo.filename)
         item.put()
-  return req.redirect(req.uri.server_uri())
+  return req.redirect(req.uri.server_uri()+'/item/'+str(item.key().id()))
 
 def serve_blob(req):
   blob_key = req.get("blob_key")
@@ -244,7 +249,8 @@ def main():
   app.add('/serve/{blob_key}', GET=serve_blob)  
   app.add('/attributes', GET=get_attributes,POST=post_to_attributes)  
   app.add('/attribute/{ascii_id}', GET=get_attribute,DELETE=delete_attribute)  
-  app.add('/upload', POST=process_upload)  
+  app.add('/upload/{user_id}', POST=process_upload)  
+  app.add('/formupload/{user_id}', POST=process_formupload)  
   app.add('/upload_url', GET=get_upload_url)  
   run_wsgi_app(app)
 

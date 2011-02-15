@@ -102,7 +102,7 @@ class Item(search.SearchableModel):
   #media_file = blobstore.BlobReferenceProperty()
   thumbnail_link = db.StringProperty() 
   media_file_key = db.StringProperty() 
-  media_filename = db.StringProperty() 
+  media_filename = db.StringProperty(default='---') 
   media_file_mime = db.StringProperty()
   json_doc = db.TextProperty(required=False,indexed=False)
   #allows full-text search

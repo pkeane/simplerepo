@@ -1,54 +1,77 @@
 body {
 	font-family: verdana, sans-serif;
+  font-size: x-small;
 	margin:0px; 
 }
 
 div#header {
-	padding: 3px 0px 5px 0px;
-	margin: 0px auto;
-	width: 960px;
-	color: #000;
-	background-color: #e8cc00;
+	padding: 8px 0px 4px 0px;
+	margin: 0px;
+	color: #bbd4ff;
 	background-color: #003388;
-	line-height: 12pt;
+	background-color: #111;
 }
 
 div#header a {
-	color: #494000;
-	color: #666031;
-	color: #6e6949;
-	color: #5e5939;
-	color: #333;
-	color: #ccc;
+  color: #fff;
+}
+
+div#header a:hover {
+  text-decoration: underline;
 }
 
 div#header h1 {
-	font-size: 10pt;
-	letter-spacing: .25px;	
+	font-size: 20px;
+  margin-top: -5px;
+  margin-right: 20px;
 	float: left;
-	margin-right: 12px;
-	margin-left: 8px;
+}
+
+div#header h1 a {
+	color: #cbdeff;
+	color: #b3d0ff;
+}
+
+div#header form {
+  float: right;
+  margin-right: 30px;
+}
+
+div#header form input {
+  border: 0;
+}
+
+div#header label {
+  color: #fff;
+}
+
+div#inner-header {
+  width: 960px;
+  width: 830px;
+  margin: 0px auto;
 }
 
 div#login {
 	float: right;
-	margin-right: 8px;
 }
 
 div#container {
 	background-color: #fff;
 	margin: 0px auto;
 	width: 960px;
+  width: 830px;
 }
 
 #content  h2 {
 	margin: 8px;
 }
 
+#topcontent {
+  border-bottom: 5px solid #bbb;
+}
+
 h1, h2, h3, h4 {
-	/*
-	font-family: Vollkorn, sans-serif;
-	 */
+	font-family: Georgia, sans-serif;
 }
 
 label {
@@ -62,7 +85,11 @@ label {
 	margin: 6px 0;
 } 
 
+H
+
+
 form {
+  /*
 	margin: 0 0 6px 0;
 	padding: 10px;
 	border-bottom: 0px solid #666;
@@ -71,6 +98,7 @@ form {
 	border-radius: 0 0 5px 5px;
 	background-color: #aaa;
 	width: 20%;
+  */
 }
 
 form h3 {
@@ -98,19 +126,23 @@ ul.grid li {
 	width: 136px;
 	text-align: center;
 	padding: 10px;
-	border: 1px solid #999;
+	border: 1px solid #bbb;
 	-moz-border-radius:  5px;
 	-webkit-border-radius: 5px;
 	border-radius: 0 0 5px 5px;
 	margin: 0;
-	margin-top: 2px;
-	margin-right: 2px;
+	margin-top: 8px;
+	margin-right: 8px;
+  -moz-box-shadow: 4px 4px 2px #ddd;
+  -webkit-box-shadow: 4px 4px 2px #ddd;
+  -box-shadow: 4px 4px 2px #ddd;
 }
 
 ul.grid li h4 {
 	margin-top: 3px;
 	font-family: Verdana;
-	font-size: 11px;
+	font-size: 10px;
+  font-weight: normal;
 }
 
 a.delete {

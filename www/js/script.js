@@ -4,6 +4,7 @@ $(document).ready(function() {
 	Dase.initAjaxForm();
 	Dase.initFormDelete();
 	Dase.initDelete('notes');
+  Dase.initToggle('topcontent');
 });
 
 Dase.initAjaxForm = function() {

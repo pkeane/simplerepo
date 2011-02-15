@@ -44,14 +44,14 @@ def auth_func():
 def get_server(app_name,auth_function):
   return appengine_rpc.HttpRpcServer(app_name+'.appspot.com',auth_function,None,'gae_login',save_cookies=True)
 
-def get_upload_url(server,collection):
-  url = server.Send('/collection/'+collection+'/upload_url',None) #None makes it GET, otherwise method is POST
+def get_upload_url(server):
+  url = server.Send('/upload_url',None) #None makes it GET, otherwise method is POST
   url = url.replace('https://'+MY_APP+'.appspot.com','')
   return url
 
-def upload_file(server,filepath,collection):
+def upload_file(server,filepath):
   filename = os.path.basename(filepath)
-  url = get_upload_url(server,collection)
+  url = get_upload_url(server)
   data = open(filepath).read()
   fields = []
   files = [('file',filename,data)]
@@ -61,6 +61,6 @@ def upload_file(server,filepath,collection):
 
 if __name__=="__main__":
   server = get_server(MY_APP,auth_func)
-  dir = '/home/pkeane/stv_histograms/img'
+  dir = '/home/pkeane/Documents'
   for file in os.listdir(dir):
-    print upload_file(server,dir+'/'+file,'new_collection')
+    print upload_file(server,dir+'/'+file)
